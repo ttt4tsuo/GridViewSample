@@ -14,4 +14,11 @@
         android:layout_height="wrap_content"
         android:numColumns="3" />
 
+    <ImageView
+        android:id="@+id/original_star_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_mood_black_24dp"
+        android:contentDescription="mood" />
+
 </android.support.constraint.ConstraintLayout>

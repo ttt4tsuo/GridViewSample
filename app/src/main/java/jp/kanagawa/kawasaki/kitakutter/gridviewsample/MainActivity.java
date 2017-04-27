@@ -2,7 +2,11 @@ package jp.kanagawa.kawasaki.kitakutter.gridviewsample;
 
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -55,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
                 mHander.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        Animator animator = AnimatorInflater.loadAnimator(getApplicationContext(), R.animator.rotation_y);
+                        Animator animator = AnimatorInflater.loadAnimator(getApplicationContext(), R.animator.scale_big);
                         GridView gv = (GridView) findViewById(R.id.grid_view);
                         StarAdapter ad = (StarAdapter) gv.getAdapter();
                         ImageView im = (ImageView)gv.getChildAt(ad.getCount()-1).findViewById(R.id.star_image);
@@ -94,6 +98,49 @@ public class MainActivity extends AppCompatActivity {
                 StartModel model = new StartModel(ad.getCount(), true);
                 mModels.clear();
                 ad.notifyDataSetChanged();
+            }
+        });
+
+        FloatingActionButton dropDown = (FloatingActionButton) findViewById(R.id.drop_down);
+        dropDown.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                StartModel model = new StartModel(mModels.size(), true);
+                mModels.add(model);
+                GridView gv = (GridView) findViewById(R.id.grid_view);
+                StarAdapter ad = (StarAdapter) gv.getAdapter();
+                ad.notifyDataSetChanged();
+
+                mHander.postDelayed(() -> {
+                    //行き先
+                    View v = gv.getChildAt(mModels.size()-1);
+                    int[] afterLoc = new int[2];
+                    v.getLocationOnScreen(afterLoc);
+                    float afterX = afterLoc[0]+(v.getRight()-v.getLeft())/2;
+                    float afterY = afterLoc[1]+(v.getBottom()-v.getTop())/2;
+                    //現在位置
+                    ImageView im = (ImageView) findViewById(R.id.original_star_image);
+                    int[] beforeLoc = new int[2];
+                    im.getLocationOnScreen(beforeLoc);
+                    float beforeX = beforeLoc[0]+(im.getRight()-im.getLeft())/2;
+                    float beforeY = beforeLoc[1]+(im.getBottom()-im.getTop())/2;
+                    //アニメーション(行き)
+                    PropertyValuesHolder holderX = PropertyValuesHolder.ofFloat("translationX", 0, afterX-beforeX);
+                    PropertyValuesHolder holderY = PropertyValuesHolder.ofFloat("translationY", 0, afterY-beforeY);
+                    ObjectAnimator oa = ObjectAnimator.ofPropertyValuesHolder(im, holderX, holderY);
+                    //アニメーション(帰り)
+                    PropertyValuesHolder BackholderX = PropertyValuesHolder.ofFloat("translationX", afterX-beforeX, 0);
+                    PropertyValuesHolder BackholderY = PropertyValuesHolder.ofFloat("translationY", afterY-beforeY, 0);
+                    ObjectAnimator backOa = ObjectAnimator.ofPropertyValuesHolder(im, BackholderX, BackholderY);
+                    AnimatorSet set = new AnimatorSet();
+                    set.setDuration(1000);
+                    set.playSequentially(oa,backOa);
+                    set.start();
+                },100);
+
+
+
             }
         });
     }
@@ -147,7 +194,8 @@ public class MainActivity extends AppCompatActivity {
                 findViewById(R.id.grid_view);
                 LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
                 convertView = inflater.inflate(R.layout.star, null);
-                ((ImageView)convertView).setImageDrawable(getDrawable(R.drawable.ic_mood_red_24dp));
+                ImageView im = (ImageView)convertView.findViewById(R.id.star_image);
+                im.setImageDrawable(getDrawable(R.drawable.ic_mood_red_24dp));
             }
 
             return convertView;
